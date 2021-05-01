@@ -10,6 +10,7 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   final _suggestions = <WordPair>[];
+  final _saved = <WordPair>{};
   final _biggerFont = const TextStyle(fontSize: 18);
 
   Widget _buildSuggestions() {
@@ -29,13 +30,46 @@ class _RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(WordPair pair) {
-    return ListTile(title: Text(pair.asPascalCase, style: _biggerFont));
+    final alreadySaved = _saved.contains(pair);
+
+    return ListTile(
+      title: Text(pair.asPascalCase, style: _biggerFont),
+      trailing: Icon(alreadySaved ? Icons.favorite : Icons.favorite_outline,
+          color: alreadySaved ? Colors.red : Colors.blue),
+      onTap: () {
+        setState(() {
+          if (alreadySaved)
+            _saved.remove(pair);
+          else
+            _saved.add(pair);
+        });
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    void _pushSaved() {
+      Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+        final tiles = _saved.map((WordPair pair) {
+          return ListTile(title: Text(pair.asPascalCase, style: _biggerFont));
+        });
+        final divided =
+            ListTile.divideTiles(context: context, tiles: tiles).toList();
+        return Scaffold(
+            appBar: AppBar(title: Text('Saved Suggestions')),
+            body: ListView(
+              children: divided,
+            ));
+      }));
+    }
+
     return Scaffold(
-        appBar: AppBar(title: Text('Startup Name Generator')),
+        appBar: AppBar(
+          title: Text('Startup Name Generator'),
+          actions: [IconButton(icon: Icon(Icons.list), onPressed: _pushSaved)],
+        ),
         body: _buildSuggestions());
   }
 }
@@ -43,6 +77,9 @@ class _RandomWordsState extends State<RandomWords> {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'Welcome to Flutter', home: RandomWords());
+    return MaterialApp(
+        title: 'Welcome to Flutter',
+        theme: ThemeData(primaryColor: Colors.green[50]),
+        home: RandomWords());
   }
 }
